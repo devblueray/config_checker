@@ -1,0 +1,23 @@
+name: 'Elixir Config Checker'
+description: 'Github action for checking the elixir runtime config against kubernetes env'
+inputs:
+  webhook:
+    description: 'Slack Webhook URL'
+    required: true
+  elixir-config:
+    description: 'Path to Elixir Config'
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Install Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
+      shell: bash
+    - name: Run Checker
+      run: python app.py
+      shell: bash
+
