@@ -9,7 +9,7 @@ import json
 branch = os.getenv("GITHUB_REF_NAME")
 owner = os.getenv("GITHUB_ACTOR")
 webhook = os.getenv("INPUT_WEBHOOK")
-env_source = os.getenv("ENV_SOURCE")
+env_source = os.getenv("INPUT_ENVSOURCE")
 #########################
 
 def parse_elixir_config():
