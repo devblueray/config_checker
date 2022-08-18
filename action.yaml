@@ -18,6 +18,6 @@ runs:
       run: pip install -r ${{ github.action_path }}/requirements.txt
       shell: bash
     - name: Run Checker
-      run: python app.py
+      run: python ${{ github.action_path }}/config_checker_test/config_checker_test/app.py
       shell: bash
 
