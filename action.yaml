@@ -7,6 +7,9 @@ inputs:
   elixir-config:
     description: 'Path to Elixir Config'
     required: true
+  envsource:
+    description: 'Path to env var source'
+    required: true
 runs:
   using: composite
   steps:
