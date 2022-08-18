@@ -9,6 +9,7 @@ import json
 branch = os.getenv("GITHUB_REF_NAME")
 owner = os.getenv("GITHUB_ACTOR")
 webhook = os.getenv("INPUT_WEBHOOK")
+env_source = os.getenv("ENV_SOURCE")
 #########################
 
 def parse_elixir_config():
@@ -25,7 +26,7 @@ def parse_elixir_config():
 
 def parse_yaml_config():
     env_config = []
-    resp = requests.get('https://doc.tools.veeps-team.com/create_output?env=stg')
+    resp = requests.get(env_source)
     with open("env.yaml", "w") as env_file:
         env_file.write(resp.text)
  
