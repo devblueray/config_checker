@@ -15,7 +15,7 @@ workspace = os.getenv("GITHUB_WORKSPACE")
 
 def parse_elixir_config():
     elixir_vars = []
-    print(workspace)
+    print(env_source)
     f = open(f'{workspace}/elixir-config', 'r')
     lines = f.readlines()
     reStr = re.compile("\"(?P<envName>[A-Z_]+([A-Z_][A-Z]+))+\"")
