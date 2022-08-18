@@ -22,7 +22,7 @@ runs:
     - name: Inject variables
       run: | 
         echo "INPUT_WEBHOOK=${{ inputs.webhook }}" >> $GITHUB_ENV
-        echo "INPUT_ENVSOURCE=${{ inputs.envsource }}" > $GITHUB_ENV
+        echo "INPUT_ENVSOURCE=${{ inputs.envsource }}" >> $GITHUB_ENV
       shell: bash
     - name: Install Dependencies
       run: pip install -r ${{ github.action_path }}/requirements.txt
