@@ -1,0 +1,212 @@
+import Config
+
+parse_url_options! = fn url ->
+  uri = URI.parse(url)
+
+  if uri.scheme not in ["http", "https"] or uri.host in [nil, ""] or not is_integer(uri.port) do
+    raise ArgumentError,
+      message: "expected a full URL with a scheme, e.g. \"https://veeps.com\", but got #{inspect(url)}"
+  end
+
+  [
+    host: uri.host,
+    port: uri.port,
+    scheme: uri.scheme
+  ]
+end
+
+cluster_config = [
+  dns_poll: [
+    strategy: Cluster.Strategy.Kubernetes.DNS,
+    config: [
+      service: System.fetch_env!("KUBE_SERVICE"),
+      foo: System.fetch_env!("BAR"),
+      application_name: System.fetch_env!("KUBE_APP_NAME"),
+      polling_interval: 10_000,
+      show_debug: true
+    ]
+  ]
+]
+
+database_url = System.fetch_env!("DATABASE_URL")
+pool_size = String.to_integer(System.get_env("POOL_SIZE") || "10")
+port = String.to_integer(System.get_env("PORT") || "4000")
+public_url = System.fetch_env!("PUBLIC_URL")
+url_options = parse_url_options!.(public_url)
+secret_key_base = System.fetch_env!("SECRET_KEY_BASE")
+
+url_host = url_options[:host]
+
+config :cloudex,
+  api_key: System.fetch_env!("CLOUDINARY_API_KEY"),
+  secret: System.fetch_env!("CLOUDINARY_SECRET"),
+  cloud_name: System.fetch_env!("CLOUDINARY_CLOUD_NAME")
+
+config :extwitter, :oauth,
+  consumer_key: System.fetch_env!("TWITTER_CONSUMER_KEY"),
+  consumer_secret: System.fetch_env!("TWITTER_CONSUMER_SECRET")
+
+config :onstage,
+  auth_secret: System.fetch_env!("AUTH_SECRET"),
+  beaconing_secret: System.fetch_env!("BEACONING_SECRET"),
+  mux_signing_key: System.fetch_env!("MUX_SIGNING_KEY"),
+  mux_signing_pem: System.fetch_env!("MUX_SIGNING_PEM"),
+  onstage_key: System.get_env("ONSTAGE_KEY", "nsDIXvdNpQieJVWBVGqDOuU5irAw7YyNeeUHynQnqjY=")
+
+config :onstage_web,
+  chat_publish_key: System.fetch_env!("PUBNUB_PUBLISH_KEY"),
+  chat_subscribe_key: System.fetch_env!("PUBNUB_SUBSCRIBE_KEY"),
+  cluster_config: cluster_config,
+  mux_data_env_key: System.fetch_env!("MUX_DATA_ENV_KEY"),
+  mux_secret: System.fetch_env!("MUX_SECRET"),
+  segment_key: System.fetch_env!("SEGMENT_KEY"),
+  sentry_dsn: System.fetch_env!("SENTRY_DSN")
+
+config :onstage_web, OnstageWeb.Endpoint,
+  url: url_options,
+  http: [port: port],
+  secret_key_base: secret_key_base,
+  render_errors: [view: OnstageWeb.ErrorView, accepts: ~w(html json), layout: false],
+  pubsub_server: Onstage.PubSub,
+  server: true,
+  check_origin: ["//#{url_host}", "//*.#{url_host}", "//*.s.#{url_host}"],
+  live_view: [signing_salt: "xidXw67K"]
+
+config :product_tracker,
+  cluster_config: cluster_config,
+  product_shard: 1
+
+config :passport_web,
+  cluster_config: cluster_config,
+  sentry_dsn: System.fetch_env!("SENTRY_DSN")
+
+config :passport_web, PassportWeb.Endpoint,
+  http: [port: port],
+  server: true,
+  url: url_options,
+  check_origin: ["//#{url_host}", "//*.#{url_host}"]
+
+config :passport_web, :bango_auth,
+  username: System.fetch_env!("THEIR_BANGAUTH"),
+  password: System.fetch_env!("THEIR_BANGPASS")
+
+config :sentry,
+  dsn: System.fetch_env!("SENTRY_DSN"),
+  release: System.fetch_env!("GIT_HASH"),
+  environment_name: System.fetch_env!("SENTRY_ENV"),
+  tags: %{
+    app_name: System.fetch_env!("SENTRY_APP_NAME")
+  }
+
+config :mux,
+  access_token_id: System.fetch_env!("MUX_ACCESS_TOKEN_ID"),
+  access_token_secret: System.fetch_env!("MUX_ACCESS_TOKEN_SECRET"),
+  signing_token_id: System.fetch_env!("MUX_SIGNING_TOKEN_ID"),
+  signing_token_secret: System.fetch_env!("MUX_SIGNING_TOKEN_SECRET")
+
+config :veeps,
+  elastic_url: System.get_env("ELASTICSEARCH_URL"),
+  ipstack_access_key: System.fetch_env!("IPSTACK_ACCESS_KEY"),
+  open_exchange_rates_app_id: System.fetch_env!("OPEN_EXCHANGE_RATES_APP_ID"),
+  mux_playback_restriction_id: System.fetch_env!("MUX_PLAYBACK_RESTRICTION_ID"),
+  primer_api_key: System.fetch_env!("PRIMER_API_KEY"),
+  primer_api_url: System.fetch_env!("PRIMER_API_URL"),
+  primer_client_session_api_version: System.get_env("PRIMER_CLIENT_SESSION_API_VERSION", "2021-10-19"),
+  primer_payments_api_version: System.get_env("PRIMER_PAYMENTS_API_VERSION", "2021-09-27"),
+  product_shard_size: 1,
+  public_host: url_host,
+  pubnub_regulator_enabled: System.get_env("PUBNUB_ENABLE_REGULATOR", "false"),
+  pubnub_subscription_key: System.fetch_env!("PUBNUB_SUBSCRIBE_KEY"),
+  slack_webhook_url: System.fetch_env!("SLACK_WEBHOOK_URL"),
+  telemetry_socket_path: "/var/run/datadog/dsd.socket",
+  ticketmaster_api_key: System.fetch_env!("TICKETMASTER_API_KEY"),
+  ticketmaster_environment: System.fetch_env!("TICKETMASTER_ENVIRONMENT"),
+  ticketmaster_should_publish: System.get_env("TICKETMASTER_PUBLISHING", "false")
+
+config :veeps, Veeps.Repo,
+  # ssl: true,
+  url: database_url,
+  pool_size: pool_size,
+  prepare: :unnamed,
+  queue_target: 2_000,
+  queue_interval: 1_000,
+  timeout: 65_000
+
+config :veeps, Veeps.Repo.Replica,
+  # ssl: true,
+  url: System.fetch_env!("REPORTING_DATABASE_URL"),
+  pool_size: pool_size,
+  prepare: :unnamed,
+  queue_target: 2_000,
+  queue_interval: 1_000,
+  timeout: 65_000
+
+config :veeps, :bango_platform,
+  username: System.fetch_env!("BANGO_USER"),
+  password: System.fetch_env!("BANGO_PASS")
+
+config :fun_with_flags, :cache,
+  enabled: true,
+  ttl: 900
+
+config :fun_with_flags, :persistence,
+  adapter: FunWithFlags.Store.Persistent.Ecto,
+  repo: Veeps.Repo
+
+config :fun_with_flags, :cache_bust_notifications,
+  adapter: FunWithFlags.Notifications.PhoenixPubSub,
+  client: Veeps.PubSub,
+  enabled: true
+
+# NOTE: the following are used in router.ex to support Swagger UI
+#   api_host
+#   oauth_authorization_url
+#   oauth_token_url
+#   swagger_ui
+config :veeps_web,
+  api_host: "api.#{url_host}",
+  cluster_config: cluster_config,
+  default_url: System.get_env("DEFAULT_URL", "/"),
+  oauth_authorization_url: "#{public_url}/oauth/authorize",
+  oauth_token_url: "#{public_url}/oauth/token",
+  segment_key: System.fetch_env!("SEGMENT_KEY"),
+  sentry_dsn: System.fetch_env!("SENTRY_DSN"),
+  swagger_ui: %{
+    config_object: %{
+      oauth2RedirectUrl: "https://api.#{url_host}/docs/oauth2-redirect.html"
+    }
+  }
+
+config :veeps_web, VeepsWeb.Endpoint,
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  http: [port: port],
+  secret_key_base: secret_key_base,
+  server: true,
+  url: url_options,
+  check_origin: ["//#{url_host}", "//*.#{url_host}"]
+
+email_adapter = if System.get_env("USE_SMTP"), do: Bamboo.SMTPAdapter, else: Bamboo.LocalAdapter
+
+config :veeps, Veeps.Mailer,
+  adapter: email_adapter,
+  server: System.fetch_env!("SMTP_SERVER"),
+  username: System.fetch_env!("SMTP_USERNAME"),
+  password: System.fetch_env!("SMTP_PASSWORD"),
+  port: System.fetch_env!("SMTP_PORT"),
+  tls: :always,
+  auth: :always
+
+config :veeps, Veeps.PromotionalMailer,
+  adapter: email_adapter,
+  server: System.fetch_env!("PROMO_SMTP_SERVER"),
+  username: System.fetch_env!("PROMO_SMTP_USERNAME"),
+  password: System.fetch_env!("PROMO_SMTP_PASSWORD"),
+  port: System.fetch_env!("PROMO_SMTP_PORT"),
+  tls: :always,
+  auth: :always
+
+config :veeps,
+       ExOauth2Provider,
+       device_flow_verification_uri: "#{public_url}/activate"
+
+config :cors_plug, origin: [public_url, "https://api.#{url_host}", "https://api.s.#{url_host}"]
