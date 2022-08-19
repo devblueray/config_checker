@@ -52,3 +52,4 @@ if __name__ == '__main__':
     if not all(elem in env_config for elem in elixir_config):
         parameters = list(set(elixir_config) - set(env_config))
         send_to_slack(parameters, branch, owner)
+        exit(1)
