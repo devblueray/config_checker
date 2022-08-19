@@ -6,7 +6,7 @@ import os
 import json
 
 ### GITHUB VARIABLES ####
-branch = os.getenv("GITHUB_REF_NAME")
+branch = os.getenv("GITHUB_REF")
 owner = os.getenv("GITHUB_ACTOR")
 webhook = os.getenv("INPUT_WEBHOOK")
 env_source = os.getenv("INPUT_ENVSOURCE")
