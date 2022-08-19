@@ -16,7 +16,6 @@ config = os.getenv("INPUT_CONFIG")
 
 def parse_elixir_config():
     elixir_vars = []
-    print(env_source)
     f = open(f'{workspace}/{config}', 'r')
     lines = f.readlines()
     reStr = re.compile("\"(?P<envName>[A-Z_]+([A-Z_][A-Z]+))+\"")
@@ -32,7 +31,6 @@ def parse_yaml_config():
     resp = requests.get(env_source)
     with open("env.yaml", "w") as env_file:
         env_file.write(resp.text)
- 
     with open('env.yaml', 'r') as stream:
         try:
             data = yaml.load(stream, Loader=yaml.FullLoader)
@@ -43,7 +41,6 @@ def parse_yaml_config():
     return env_config
 
 def send_to_slack(parameters, branch, creator):
-    print(f"Undefined parameters {parameters} on branch {branch} owned by {owner}")
     message = {"text": f"Undefined parameters {parameters} on branch {branch} owned by {owner}"}
     requests.post(webhook, json.dumps(message))
 
@@ -52,7 +49,6 @@ if __name__ == '__main__':
     elixir_config = parse_elixir_config()
     elixir_config = [v for v in parse_elixir_config() if v not in badlist]
     env_config = parse_yaml_config()
-    print(env_config)
     if not all(elem in env_config for elem in elixir_config):
         parameters = list(set(elixir_config) - set(env_config))
         send_to_slack(parameters, branch, owner)
