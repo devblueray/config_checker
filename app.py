@@ -15,7 +15,7 @@ workspace = os.getenv("GITHUB_WORKSPACE")
 
 def parse_elixir_config():
     elixir_vars = []
-    print(webhook)
+    print(env_source)
     f = open(f'{workspace}/elixir-config', 'r')
     lines = f.readlines()
     reStr = re.compile("\"(?P<envName>[A-Z_]+([A-Z_][A-Z]+))+\"")
@@ -47,7 +47,9 @@ def send_to_slack(parameters, branch, creator):
     requests.post(webhook, json.dumps(message))
 
 if __name__ == '__main__':
+    badlist = ["GIT_HASH"]
     elixir_config = parse_elixir_config()
+    elixir_config = [v for v in parse_elixir_config() if v not in badlist]
     env_config = parse_yaml_config()
     print(env_config)
     if not all(elem in env_config for elem in elixir_config):
