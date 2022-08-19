@@ -4,7 +4,7 @@ inputs:
   webhook:
     description: 'Slack Webhook URL'
     required: true
-  elixir-config:
+  config:
     description: 'Path to Elixir Config'
     required: true
   envsource:
@@ -23,6 +23,7 @@ runs:
       run: | 
         echo "INPUT_WEBHOOK=${{ inputs.webhook }}" >> $GITHUB_ENV
         echo "INPUT_ENVSOURCE=${{ inputs.envsource }}" >> $GITHUB_ENV
+        echo "INPUT_CONFIG"=${{ inputs.config }}" >> $GITHUB_ENV
       shell: bash
     - name: Install Dependencies
       run: pip install -r ${{ github.action_path }}/requirements.txt

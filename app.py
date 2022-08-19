@@ -11,12 +11,13 @@ owner = os.getenv("GITHUB_ACTOR")
 webhook = os.getenv("INPUT_WEBHOOK")
 env_source = os.getenv("INPUT_ENVSOURCE")
 workspace = os.getenv("GITHUB_WORKSPACE")
+config = os.getenv("INPUT_CONFIG")
 #########################
 
 def parse_elixir_config():
     elixir_vars = []
     print(env_source)
-    f = open(f'{workspace}/elixir-config', 'r')
+    f = open(f'{workspace}/{config}', 'r')
     lines = f.readlines()
     reStr = re.compile("\"(?P<envName>[A-Z_]+([A-Z_][A-Z]+))+\"")
     for l in lines:
